@@ -1,0 +1,27 @@
+1. Initialize RegistrationNumberArray
+2. Loop on RegistrationNumberArray
+	2.1. Loop on date range - 01/01/2007 to 31/12/2010
+		2.1.1. Call a GET Request for url: https://ioqm.manageexam.com/RMO/Login
+		2.1.2. Get response cookies for above GET request in separate variable/object.
+		2.1.3. Raise a POST request with following details:
+			2.1.3.1. URL: https://ioqm.manageexam.com/RMO/Login
+			2.1.3.2. Cookies: saved cookies
+			2.1.3.3. Request body:
+			{
+				"__RequestVerificationToken": "<token from body>",
+				"RegNo": "<current RegNo here>",
+				"DOB": "<current DOB here>"
+			}
+			2.1.3.4. If following string exists in response body:
+				"<title>Dashboard - IOQM 2024</title>"
+					Then - save response body in database.
+					else - continue;
+
+
+
+MySQL table structure:
+Id Int primary key auto_increment,
+registrationNo varchar(50),
+Content TEXT
+
+Postman link: http://localhost:8080/api/crawler/fetch?regNo=MTA24125521&dob=29/09/2010
