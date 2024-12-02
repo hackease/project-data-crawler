@@ -3,7 +3,7 @@ package com.project.dataCrawler.utility;
 import com.project.dataCrawler.config.AppConfig;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,13 +14,17 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Component
 public class ApplicationStarter {
     
-    @Autowired
-    private AppConfig appConfig;
+    private final AppConfig appConfig;
     
     private final List<String> regNoList = new ArrayList<>();
     private final List<String> dobList = new ArrayList<>();
+    
+    public ApplicationStarter(AppConfig appConfig) {
+        this.appConfig = appConfig;
+    }
     
     public void populateData() throws IOException {
         // PDF file path
