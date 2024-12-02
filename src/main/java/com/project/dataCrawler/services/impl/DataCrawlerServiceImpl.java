@@ -89,10 +89,16 @@ public class DataCrawlerServiceImpl implements DataCrawlerService {
                 userDetails.setRegion(details.get("Region"));
                 userDetails.setScore(details.get("Tentative Score"));
                 
-                UserDetailsEntity savedUserDetails = userDetailsRepository.save(userDetails);
-                
-                if (!userDetailsRepository.existsByRegNo(regNo))
-                    result = userDetailsMapper.toDto(savedUserDetails);
+                result = userDetailsMapper.toDto(userDetailsRepository.save(userDetails));
+            } else {
+                if (dob.equals("31/07/2012")) {
+                    // Save RegNo into the database
+                    userDetails.setRegNo(regNo);
+                    // Set DOB to "Not in range" into the database
+                    userDetails.setDob("Not in range");
+                    
+                    result = userDetailsMapper.toDto(userDetailsRepository.save(userDetails));
+                }
             }
             
             return result;

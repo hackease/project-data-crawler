@@ -24,7 +24,7 @@ public class DataCrawlerApplication {
 		SpringApplication.run(DataCrawlerApplication.class, args);
         
         // Path to your PDF file
-        String pdfFilePath = "Student_List.pdf";
+        String pdfFilePath = "C:\\Users\\Aman\\Desktop\\dataCrawler\\dataCrawler\\Student_List.pdf                      ";
         
         try (PDDocument document = PDDocument.load(new File(pdfFilePath))) {
             // Extract text from the PDF
@@ -50,7 +50,7 @@ public class DataCrawlerApplication {
             }
             
             // Number of threads to use
-            int threadCount = 8;
+            int threadCount = 10;
             
             // Create a fixed thread pool
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
