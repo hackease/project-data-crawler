@@ -5,17 +5,17 @@ import com.project.dataCrawler.domain.entities.UserDetailsEntity;
 import com.project.dataCrawler.mappers.UserDetailsMapper;
 import com.project.dataCrawler.repositories.UserDetailsRepository;
 import com.project.dataCrawler.services.DataCrawlerService;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class DataCrawlerServiceImpl implements DataCrawlerService {
     
@@ -89,8 +89,10 @@ public class DataCrawlerServiceImpl implements DataCrawlerService {
                 userDetails.setRegion(details.get("Region"));
                 userDetails.setScore(details.get("Tentative Score"));
                 
-                result = userDetailsMapper.toDto(userDetailsRepository.save(userDetails));
+                UserDetailsEntity savedUserDetails = userDetailsRepository.save(userDetails);
                 
+                if (!userDetailsRepository.existsByRegNo(regNo))
+                    result = userDetailsMapper.toDto(savedUserDetails);
             }
             
             return result;
@@ -98,6 +100,11 @@ public class DataCrawlerServiceImpl implements DataCrawlerService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    @Override
+    public boolean checkIfRegNoExists(String regNo) {
+        return userDetailsRepository.existsByRegNo(regNo);
     }
     
     private static Map<String, String> extractDetails(Document document) {

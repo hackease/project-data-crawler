@@ -1,22 +1,24 @@
 package com.project.dataCrawler;
 
-import lombok.extern.slf4j.Slf4j;
+import com.project.dataCrawler.utility.ThreadRunnable;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.File;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Slf4j
 @SpringBootApplication
 public class DataCrawlerApplication {
+    
+    private static final List<String> regNoList = new ArrayList<>();
+    private static final List<String> dobList = new ArrayList<>();
     
     public static void main(String[] args) {
 		SpringApplication.run(DataCrawlerApplication.class, args);
@@ -32,54 +34,46 @@ public class DataCrawlerApplication {
             // Match the regex for your registration number format
             Matcher matcher = Pattern.compile("\\b[A-Z]{3}\\d{8}\\b").matcher(text);
             
-            int numberOfDetailsFetched = 0;
-            
-            // Find and check all matches
+            // Populate regNo List
             while (matcher.find()) {
-                String regNo = matcher.group();
-                int statusCode = 204;
-                
-                for (int year=2007; year<=2010; year++) {
-                    // Break if Status Code is 201
-                    if (statusCode == 201) break;
-                    
-                    for (int month=1; month<=12; month++) {
-                        // Break if Status Code is 201
-                        if (statusCode == 201) break;
-                        
-                        for (int date=1; date<=31; date++) {
-                            // Break if Status Code is 201
-                            if (statusCode == 201) break;
-                            
-                            String dob = String.format("%02d/%02d/%04d", date, month, year);
-                            
-                            String url = "http://localhost:8080/api/crawler/fetch?regNo="+regNo+"&dob="+dob;
-                            
-                            HttpClient client = HttpClient.newHttpClient();
-                            
-                            HttpRequest request = HttpRequest.newBuilder()
-                                                          .uri(URI.create(url))
-                                                          .POST(HttpRequest.BodyPublishers.noBody())
-                                                          .build();
-                            
-                            HttpResponse<String> response = client.send(
-                                    request,
-                                    HttpResponse.BodyHandlers.ofString()
-                            );
-                            
-                            statusCode = response.statusCode();
-                        }
-                    }
-                }
-                
-                numberOfDetailsFetched++;
-                
-                if (statusCode == 201)
-                    log.info("Details fetched and saved successfully for {}! -> {}", regNo, numberOfDetailsFetched);
-                else
-                    log.info("Details not found for {}! -> {}", regNo, numberOfDetailsFetched);
+                regNoList.add(matcher.group());
             }
             
+            // Populate dob List from 01/08/2005 to 31/07/2012
+            for (int year=2005; year<=2012; year++) {
+                for (int month=1; month<=12; month++) {
+                    for (int date=1; date<=31; date++) {
+                        if ((year == 2005 && month < 8) || (year == 2012 && month > 7)) continue;
+                        dobList.add(String.format("%02d/%02d/%04d", date, month, year));
+                    }
+                }
+            }
+            
+            // Number of threads to use
+            int threadCount = 8;
+            
+            // Create a fixed thread pool
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            
+            // Divide work among threads
+            int chunkSize = regNoList.size() / threadCount;
+            List<Runnable> threads = new ArrayList<>();
+            
+            for (int i=0; i<threadCount; i++) {
+                int start = i * chunkSize;
+                int end = (i == threadCount - 1) ? regNoList.size() : start + chunkSize;
+                
+                // Create a task for this chunk
+                threads.add(new ThreadRunnable(regNoList, dobList, start, end));
+            }
+            
+            // Submit all tasks to the executor
+            for (Runnable thread : threads) {
+                executor.submit(thread);
+            }
+            
+            // Shutdown executor after all tasks are done
+            executor.shutdown();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
