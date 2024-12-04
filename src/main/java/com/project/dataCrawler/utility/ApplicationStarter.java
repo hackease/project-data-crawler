@@ -5,9 +5,14 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,18 +32,30 @@ public class ApplicationStarter {
     }
     
     public void populateData() throws IOException {
-        // PDF file path
-        String filePath = appConfig.getFilePath();
+        List<String> cleanedData;
         
-        // Get PDF from file path
-        PDDocument document = PDDocument.load(new File(filePath));
+        // TXT file path
+        Path txtFilePath = Path.of("Left_Student_List.txt");
         
-        // Extract text from the PDF
-        PDFTextStripper pdfStripper = new PDFTextStripper();
-        String text = pdfStripper.getText(document);
+        // Check if the TXT file exists
+        if (!Files.exists(txtFilePath)) {
+            // Create TXT file
+            Files.createFile(txtFilePath);
+            
+            // PDF file path
+            String pdfFilePath = appConfig.getFilePath();
+            
+            // Extract and clean data from the PDF
+            cleanedData = extractAndCleanDataFromPdf(pdfFilePath);
+            
+            // Write cleaned data to the TXT file
+            writeToTxtFile(cleanedData, txtFilePath);
+        }
+        
+        String txtFileContent = Files.readString(txtFilePath);
         
         // Match the regex for your registration number format
-        Matcher matcher = Pattern.compile("\\b[A-Z]{3}\\d{8}\\b").matcher(text);
+        Matcher matcher = Pattern.compile("\\b[A-Z]{3}\\d{8}\\b").matcher(txtFileContent);
         
         // Populate regNo List
         while (matcher.find()) {
@@ -57,6 +74,33 @@ public class ApplicationStarter {
         
     }
     
+    private void writeToTxtFile(List<String> data, Path txtFilePath) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(txtFilePath.toUri()))) {
+            for (String line : data) {
+                writer.write(line);
+                writer.newLine();
+            }
+        }
+    }
+    
+    private List<String> extractAndCleanDataFromPdf(String pdfFilePath) throws IOException {
+        List<String> result;
+        
+        try (PDDocument document = PDDocument.load(new File(pdfFilePath))) {
+            PDFTextStripper textStripper = new PDFTextStripper();
+            String text = textStripper.getText(document);
+            
+            result = Arrays.stream(text.split("\n"))                                // Split by newline to create lines
+                             .map(line -> line.split("\\s+"))                       // Split each line into words
+                             .filter(words -> words.length > 1)                           // Ensure line has enough words
+                             .map(words -> words[1])                                      // Extract the second word
+                             .filter(word -> word.matches("[A-Z]{3}[0-9]{8}"))      // Filter by Registration No. pattern
+                             .toList();                                                   // Collect into a list
+        }
+        
+        return result;
+    }
+    
     public void startThreads() {
         // Number of threads to use
         int threadCount = 10;
@@ -72,7 +116,7 @@ public class ApplicationStarter {
             int start = i * chunkSize;
             int end = (i == threadCount - 1) ? regNoList.size() : start + chunkSize;
             
-            // Create a task for this chunk
+            // Create a thread for this chunk
             threads.add(new ThreadRunnable(regNoList, dobList, start, end));
         }
         

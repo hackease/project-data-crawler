@@ -3,10 +3,14 @@ package com.project.dataCrawler.utility;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 @Slf4j
@@ -36,7 +40,30 @@ public class ThreadRunnable implements Runnable {
                 else
                     log.info("Data not found for {}!", regNo);
             }
+            
+            try {
+                // Delete the Reg No from the txt file
+                deleteUsedRegNo(regNo);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
+    }
+    
+    private void deleteUsedRegNo(String regNo) throws IOException {
+        // TXT file path
+        Path txtFilePath = Path.of("Left_Student_List.txt");
+        
+        // Read all lines from the file
+        List<String> lines = Files.readAllLines(txtFilePath);
+        
+        // Filter out the lines that contains regNo
+        List<String> updatedLines = lines.stream()
+                                            .filter(line -> !line.contains(regNo))
+                                            .toList();
+        
+        // Write the updated lines back to the file
+        Files.write(txtFilePath, updatedLines, StandardOpenOption.TRUNCATE_EXISTING);
     }
     
     // Check if RegNo already exists in the database
