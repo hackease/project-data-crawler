@@ -1,16 +1,17 @@
 package com.project.dataCrawler.config;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+@Getter
 @Component
 public class AppConfig {
     
-    @Value("${app.file.path}")
-    private String filePath;
+    @Value("${app.file.pdfFilePath}")
+    private String pdfFilePath;
     
-    public String getFilePath() {
-        return filePath;
-    }
-
+    @Value("${app.file.txtFilePath}")
+    private String txtFilePath;
+    
 }

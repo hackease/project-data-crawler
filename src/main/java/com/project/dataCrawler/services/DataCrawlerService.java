@@ -8,6 +8,4 @@ public interface DataCrawlerService {
     
     UserDetailsDto fetchAndSaveDetails(String regNo, String dob);
     
-    boolean checkIfRegNoExists(String regNo);
-    
 }

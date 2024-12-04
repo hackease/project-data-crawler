@@ -1,6 +1,6 @@
 package com.project.dataCrawler;
 
-import com.project.dataCrawler.utility.ApplicationStarter;
+import com.project.dataCrawler.config.ApplicationStarter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -17,12 +17,13 @@ public class DataCrawlerApplication {
         try {
             // Populate data (RegNo & DOB)
             applicationStarter.populateData();
+            
+            // Execute threads
+            applicationStarter.startThreads();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         
-        // Execute threads
-        applicationStarter.startThreads();
         
 	}
  

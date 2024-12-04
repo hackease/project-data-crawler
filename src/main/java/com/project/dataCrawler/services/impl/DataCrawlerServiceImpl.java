@@ -10,6 +10,7 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -21,14 +22,11 @@ public class DataCrawlerServiceImpl implements DataCrawlerService {
     
     private static final String URL = "https://ioqm.manageexam.com/RMO/Login";
     
-    private final UserDetailsRepository userDetailsRepository;
+    @Autowired
+    private UserDetailsRepository userDetailsRepository;
     
-    private final UserDetailsMapper userDetailsMapper;
-    
-    public DataCrawlerServiceImpl(UserDetailsRepository userDetailsRepository, UserDetailsMapper userDetailsMapper) {
-        this.userDetailsRepository = userDetailsRepository;
-        this.userDetailsMapper = userDetailsMapper;
-    }
+    @Autowired
+    private UserDetailsMapper userDetailsMapper;
     
     @Override
     public UserDetailsDto fetchAndSaveDetails(String regNo, String dob) {
@@ -106,11 +104,6 @@ public class DataCrawlerServiceImpl implements DataCrawlerService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-    
-    @Override
-    public boolean checkIfRegNoExists(String regNo) {
-        return userDetailsRepository.existsByRegNo(regNo);
     }
     
     private static Map<String, String> extractDetails(Document document) {
