@@ -11,6 +11,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -29,7 +31,7 @@ public class DataCrawlerServiceImpl implements DataCrawlerService {
     private UserDetailsMapper userDetailsMapper;
     
     @Override
-    public UserDetailsDto fetchAndSaveDetails(String regNo, String dob) {
+    public ResponseEntity<UserDetailsDto> fetchAndSaveDetails(String regNo, String dob) {
         
         UserDetailsDto result = new UserDetailsDto();
         
@@ -99,11 +101,19 @@ public class DataCrawlerServiceImpl implements DataCrawlerService {
                 }
             }
             
-            return result;
+            if (result.getId() != null && !result.getDob().equals("Not in range"))
+                return new ResponseEntity<>(result, HttpStatus.CREATED);
+            else
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    @Override
+    public boolean checkIfRegNoExists(String regNo) {
+        return userDetailsRepository.existsByRegNo(regNo);
     }
     
     private static Map<String, String> extractDetails(Document document) {

@@ -19,12 +19,7 @@ public class DataCrawlerController {
             @RequestParam String regNo,
             @RequestParam String dob
     ) {
-        UserDetailsDto userDetailsDto = dataCrawlerService.fetchAndSaveDetails(regNo, dob);
-        
-        if (userDetailsDto.getId() != null && !userDetailsDto.getDob().equals("Not in range"))
-            return new ResponseEntity<>(userDetailsDto, HttpStatus.CREATED);
-        else
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return dataCrawlerService.fetchAndSaveDetails(regNo, dob);
     }
     
 }

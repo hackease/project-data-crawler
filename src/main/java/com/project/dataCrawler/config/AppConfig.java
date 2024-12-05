@@ -11,7 +11,4 @@ public class AppConfig {
     @Value("${app.file.pdfFilePath}")
     private String pdfFilePath;
     
-    @Value("${app.file.txtFilePath}")
-    private String txtFilePath;
-    
 }
